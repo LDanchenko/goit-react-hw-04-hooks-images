@@ -1,4 +1,5 @@
 import { ToastContainer, toast } from 'react-toastify';
+import toastConfig from 'services/toast-config.js';
 import 'react-toastify/dist/ReactToastify.css';
 import { Component } from 'react';
 import { FaSearch } from 'react-icons/fa';
@@ -18,15 +19,7 @@ class SearchBar extends Component {
     event.preventDefault();
     const query = this.state.query.trim();
     if (query === '') {
-      toast.error('Please enter the correct value', {
-        position: 'top-right',
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      toast.error('Please enter the correct value', toastConfig);
     } else {
       this.props.onSubmit && this.props.onSubmit(query);
     }
