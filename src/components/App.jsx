@@ -3,16 +3,22 @@ import { SearchBar } from './Searchbar';
 import getImages from 'services/pixabay-api';
 
 class App extends Component {
-  state = {};
-
   async componentDidMount() {
     //не тут? кинуть try catch
     const images = await getImages();
     console.log(images);
   }
 
+  searchImages = query => {
+    console.log(query);
+  };
+
   render() {
-    return <SearchBar></SearchBar>;
+    return (
+      <>
+        <SearchBar onSubmit={this.searchImages} />
+      </>
+    );
   }
 }
 
