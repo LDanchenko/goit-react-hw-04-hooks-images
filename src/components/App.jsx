@@ -7,8 +7,10 @@ import { SearchBar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
 import { Button } from './Button';
 import { RestAPI } from 'services/restapi';
+import { Modal } from './Modal';
 import toastConfig from 'services/toast-config.js';
 import styles from './App.module.css';
+
 const PERPAGE = 12;
 const restApi = new RestAPI(PERPAGE);
 
@@ -18,6 +20,8 @@ class App extends Component {
     query: '',
     total: 0,
     loading: false,
+    showModal: false,
+    modalImage: '',
   };
 
   handleForm = async query => {
@@ -30,6 +34,7 @@ class App extends Component {
       images: data.images,
       total: data.total,
       loading: false,
+      modalImage: '',
     });
   };
 
@@ -76,8 +81,26 @@ class App extends Component {
     });
   };
 
+  showModal = event => {
+    if (event.target.nodeName === 'IMG') {
+      const id = Number.parseInt(event.target.id);
+      const modalImage = this.state.images.find(image => image.id === id);
+      this.setState({
+        showModal: true,
+        modalImage: modalImage.largeImageURL,
+      });
+    }
+  };
+
+  closeModal = () => {
+    this.setState({
+      showModal: false,
+      modalImage: '',
+    });
+  };
+
   render() {
-    const { images, total, loading } = this.state;
+    const { query, images, total, loading, showModal, modalImage } = this.state;
     let button;
     if (loading) {
       button = (
@@ -91,9 +114,14 @@ class App extends Component {
     return (
       <>
         <SearchBar onSubmit={this.handleForm} />
-        {images.length > 0 && <ImageGallery images={images} />}
+        {images.length > 0 && (
+          <ImageGallery imagesList={images} onClick={this.showModal} />
+        )}
         {button}
         <ToastContainer />
+        {showModal && (
+          <Modal image={modalImage} query={query} onClose={this.closeModal} />
+        )}
       </>
     );
   }

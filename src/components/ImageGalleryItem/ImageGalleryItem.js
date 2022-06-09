@@ -1,11 +1,18 @@
 import style from './ImageGalleryItem.module.css';
+import PropTypes from 'prop-types';
 
-const ImageGalleryItem = ({ src, alt }) => {
+const ImageGalleryItem = ({ id, src, alt }) => {
   return (
     <li className={style.galleryItem}>
-      <img src={src} alt={alt} className={style.galleryImage} />
+      <img src={src} alt={alt} id={id} className={style.galleryImage} />
     </li>
   );
 };
 
 export { ImageGalleryItem };
+
+ImageGalleryItem.propTypes = {
+  id: PropTypes.number.isRequired,
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+};

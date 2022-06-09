@@ -1,5 +1,6 @@
 import { ToastContainer, toast } from 'react-toastify';
 import toastConfig from 'services/toast-config.js';
+import PropTypes from 'prop-types';
 import 'react-toastify/dist/ReactToastify.css';
 import { Component } from 'react';
 import { FaSearch } from 'react-icons/fa';
@@ -56,3 +57,7 @@ class SearchBar extends Component {
 }
 
 export { SearchBar };
+
+SearchBar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};
