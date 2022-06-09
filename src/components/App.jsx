@@ -1,12 +1,14 @@
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+import { TailSpin } from 'react-loader-spinner';
 import { Component } from 'react';
 import { SearchBar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
 import { Button } from './Button';
 import { RestAPI } from 'services/restapi';
-// import getImages from 'services/pixabay-api';
 import toastConfig from 'services/toast-config.js';
+import styles from './App.module.css';
 const PERPAGE = 12;
 const restApi = new RestAPI(PERPAGE);
 
@@ -15,14 +17,20 @@ class App extends Component {
     images: [],
     query: '',
     total: 0,
+    loading: false,
   };
 
   handleForm = async query => {
+    this.setState({ loading: true });
     restApi.setQuery(query);
     restApi.resetPage();
     const data = await this.getImages();
-    this.setState({ query, images: data.images, total: data.total });
-    console.log(restApi);
+    this.setState({
+      query,
+      images: data.images,
+      total: data.total,
+      loading: false,
+    });
   };
 
   getApiData = async query => {
@@ -42,12 +50,11 @@ class App extends Component {
   };
 
   getImages = async () => {
-    const images = await this.getApiData(this.state.query);
-    console.log(images);
-    let imageData = [];
+    const data = await this.getApiData(this.state.query);
+    let images = [];
     let total = 0;
-    if (images) {
-      imageData = images.hits.map(image => {
+    if (data) {
+      images = data.hits.map(image => {
         return {
           id: image.id,
           webformatURL: image.webformatURL,
@@ -55,30 +62,37 @@ class App extends Component {
           tag: image.tags,
         };
       });
-      total = images.total;
+      total = data.total;
     }
-    return { images: imageData, total };
+    return { images, total };
   };
 
   handleOnLoadMoreClick = async () => {
+    this.setState({ loading: true });
     restApi.nextPage();
     const data = await this.getImages();
     this.setState(prevState => {
-      return { images: [...prevState.images, ...data.images] };
+      return { images: [...prevState.images, ...data.images], loading: false };
     });
   };
 
   render() {
-    console.log(restApi);
+    const { images, total, loading } = this.state;
+    let button;
+    if (loading) {
+      button = (
+        <div className={styles.loading}>
+          <TailSpin color="#00BFFF" height={40} width={40} />
+        </div>
+      );
+    } else if (!loading && images.length < total) {
+      button = <Button onLoadMore={this.handleOnLoadMoreClick} />;
+    }
     return (
       <>
         <SearchBar onSubmit={this.handleForm} />
-        {this.state.images.length > 0 && (
-          <ImageGallery images={this.state.images} />
-        )}
-        {this.state.images.length < this.state.total && (
-          <Button onLoadMore={this.handleOnLoadMoreClick} />
-        )}
+        {images.length > 0 && <ImageGallery images={images} />}
+        {button}
         <ToastContainer />
       </>
     );

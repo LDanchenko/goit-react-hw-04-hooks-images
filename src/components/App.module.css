@@ -1,0 +1,7 @@
+.loading {
+  position: relative;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-block;
+}
