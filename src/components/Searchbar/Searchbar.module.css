@@ -2,6 +2,9 @@
   background-color: #0047ab;
   padding: 7px 0px;
   text-align: center;
+  position: fixed;
+  width: 100%;
+  top: 0;
 }
 
 .form {
