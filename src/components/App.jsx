@@ -15,35 +15,31 @@ const PERPAGE = 12;
 const restApi = new RestAPI(PERPAGE);
 
 const App = () => {
-  const [query, setQuery] = useState(''); // effect
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [modal, setModal] = useState(false); // effect
-  const [modalImage, setModalImage] = useState(false); // effect
-  let button = <></>;
+  const [modal, setModal] = useState(false); //effect
+  const [modalImage, setModalImage] = useState(false);
   const [total, setTotal] = useState(0);
   const [images, setImages] = useState([]);
 
   const handleForm = async query => {
     setLoading(true);
     setImages([]);
+    setTotal(0);
     restApi.setQuery(query);
     restApi.resetPage();
     setQuery(query);
   };
 
   useEffect(() => {
-    if (!query) {
+    if (!loading) {
       return;
     }
     getApiData(query)
       .then(data => handleApiData(data))
       .catch(error => console.log(error.message))
       .finally(() => setLoading(false));
-
-    return () => {
-      console.log('cleared');
-    };
-  }, [query]);
+  }, [query, loading]);
 
   const getApiData = async query => {
     try {
@@ -78,35 +74,30 @@ const App = () => {
     return { images, total };
   };
 
-  // const handleOnLoadMoreClick = async () => {
-  //   setLoading(true);
-  //   restApi.nextPage();
-  //   const data = await getImages();
-  //   setImages({ type: 'load', images: data.images });
-  //   setLoading(false);
-  // };
+  const handleOnLoadMoreClick = () => {
+    restApi.nextPage();
+    setLoading(true);
+  };
 
-  // const showModal = event => {
-  //   if (event.target.nodeName === 'IMG') {
-  //     const id = Number.parseInt(event.target.id);
-  //     const modalImage = images.images.find(image => image.id === id);
-  //     setModal(true);
-  //     setModalImage(modalImage.largeImageURL);
-  //   }
-  // };
+  const showModal = event => {
+    if (event.target.nodeName === 'IMG') {
+      const id = Number.parseInt(event.target.id);
+      const modalImage = images.find(image => image.id === id);
+      setModal(true);
+      setModalImage(modalImage.largeImageURL);
+    }
+  };
 
-  // const closeModal = () => {
-  //   setModal(false);
-  //   setModalImage('');
-  // };
-
-  // const getButton = () => {
+  const closeModal = () => {
+    setModal(false);
+    setModalImage('');
+  };
 
   return (
     <>
       <SearchBar onSubmit={handleForm} />
       {images.length > 0 && (
-        <ImageGallery imagesList={images} onClick={() => console.log()} />
+        <ImageGallery imagesList={images} onClick={showModal} />
       )}
       {loading && (
         <div className={styles.loading}>
@@ -114,14 +105,10 @@ const App = () => {
         </div>
       )}
 
-      {!loading && images.length < total && (
-        <Button onLoadMore={() => console.log()} />
-      )}
+      {images.length < total && <Button onLoadMore={handleOnLoadMoreClick} />}
 
       <ToastContainer />
-      {/* {showModal && (
-        <Modal image={modalImage} query={query} onClose={closeModal} />
-      )} */}
+      {modal && <Modal image={modalImage} query={query} onClose={closeModal} />}
     </>
   );
 };
