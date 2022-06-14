@@ -2,7 +2,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import { TailSpin } from 'react-loader-spinner';
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { SearchBar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
 import { Button } from './Button';
@@ -14,31 +14,38 @@ import styles from './App.module.css';
 const PERPAGE = 12;
 const restApi = new RestAPI(PERPAGE);
 
-class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    total: 0,
-    loading: false,
-    showModal: false,
-    modalImage: '',
-  };
+const App = () => {
+  const [query, setQuery] = useState(''); // effect
+  const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState(false); // effect
+  const [modalImage, setModalImage] = useState(false); // effect
+  let button = <></>;
+  const [total, setTotal] = useState(0);
+  const [images, setImages] = useState([]);
 
-  handleForm = async query => {
-    this.setState({ loading: true });
+  const handleForm = async query => {
+    setLoading(true);
+    setImages([]);
     restApi.setQuery(query);
     restApi.resetPage();
-    const data = await this.getImages();
-    this.setState({
-      query,
-      images: data.images,
-      total: data.total,
-      loading: false,
-      modalImage: '',
-    });
+    setQuery(query);
   };
 
-  getApiData = async query => {
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
+    getApiData(query)
+      .then(data => handleApiData(data))
+      .catch(error => console.log(error.message))
+      .finally(() => setLoading(false));
+
+    return () => {
+      console.log('cleared');
+    };
+  }, [query]);
+
+  const getApiData = async query => {
     try {
       const data = await restApi.fetchData(query);
       if (data.total === 0) {
@@ -54,12 +61,10 @@ class App extends Component {
     }
   };
 
-  getImages = async () => {
-    const data = await this.getApiData(this.state.query);
-    let images = [];
-    let total = 0;
+  const handleApiData = data => {
+    let imageArray = [];
     if (data) {
-      images = data.hits.map(image => {
+      imageArray = data.hits.map(image => {
         return {
           id: image.id,
           webformatURL: image.webformatURL,
@@ -67,64 +72,58 @@ class App extends Component {
           tag: image.tags,
         };
       });
-      total = data.total;
+      setTotal(data.total);
+      setImages(prevImages => [...prevImages, ...imageArray]);
     }
     return { images, total };
   };
 
-  handleOnLoadMoreClick = async () => {
-    this.setState({ loading: true });
-    restApi.nextPage();
-    const data = await this.getImages();
-    this.setState(prevState => {
-      return { images: [...prevState.images, ...data.images], loading: false };
-    });
-  };
+  // const handleOnLoadMoreClick = async () => {
+  //   setLoading(true);
+  //   restApi.nextPage();
+  //   const data = await getImages();
+  //   setImages({ type: 'load', images: data.images });
+  //   setLoading(false);
+  // };
 
-  showModal = event => {
-    if (event.target.nodeName === 'IMG') {
-      const id = Number.parseInt(event.target.id);
-      const modalImage = this.state.images.find(image => image.id === id);
-      this.setState({
-        showModal: true,
-        modalImage: modalImage.largeImageURL,
-      });
-    }
-  };
+  // const showModal = event => {
+  //   if (event.target.nodeName === 'IMG') {
+  //     const id = Number.parseInt(event.target.id);
+  //     const modalImage = images.images.find(image => image.id === id);
+  //     setModal(true);
+  //     setModalImage(modalImage.largeImageURL);
+  //   }
+  // };
 
-  closeModal = () => {
-    this.setState({
-      showModal: false,
-      modalImage: '',
-    });
-  };
+  // const closeModal = () => {
+  //   setModal(false);
+  //   setModalImage('');
+  // };
 
-  render() {
-    const { query, images, total, loading, showModal, modalImage } = this.state;
-    let button;
-    if (loading) {
-      button = (
+  // const getButton = () => {
+
+  return (
+    <>
+      <SearchBar onSubmit={handleForm} />
+      {images.length > 0 && (
+        <ImageGallery imagesList={images} onClick={() => console.log()} />
+      )}
+      {loading && (
         <div className={styles.loading}>
           <TailSpin color="#00BFFF" height={40} width={40} />
         </div>
-      );
-    } else if (!loading && images.length < total) {
-      button = <Button onLoadMore={this.handleOnLoadMoreClick} />;
-    }
-    return (
-      <>
-        <SearchBar onSubmit={this.handleForm} />
-        {images.length > 0 && (
-          <ImageGallery imagesList={images} onClick={this.showModal} />
-        )}
-        {button}
-        <ToastContainer />
-        {showModal && (
-          <Modal image={modalImage} query={query} onClose={this.closeModal} />
-        )}
-      </>
-    );
-  }
-}
+      )}
+
+      {!loading && images.length < total && (
+        <Button onLoadMore={() => console.log()} />
+      )}
+
+      <ToastContainer />
+      {/* {showModal && (
+        <Modal image={modalImage} query={query} onClose={closeModal} />
+      )} */}
+    </>
+  );
+};
 
 export { App };
