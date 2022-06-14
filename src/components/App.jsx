@@ -39,6 +39,7 @@ const App = () => {
       .then(data => handleApiData(data))
       .catch(error => console.log(error.message))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line
   }, [query, loading]);
 
   const getApiData = async query => {
